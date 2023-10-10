@@ -21,6 +21,7 @@
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/laravel/serializable-closure" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/php-di/invoker" />
       <excludeFolder url="file://$MODULE_DIR$/api/vendor/php-di/php-di" />
+      <excludeFolder url="file://$MODULE_DIR$/api/vendor/php-di/slim-bridge" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
