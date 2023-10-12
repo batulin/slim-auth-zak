@@ -9,7 +9,7 @@ class WelcomeController
 {
     public function index(Request $request, Response $response, $fff = null)
     {
-        $response->getBody()->write("hello");
+        $response->getBody()->write("oops");
 
         return $response;
     }
