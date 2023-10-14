@@ -2,11 +2,12 @@
 
 namespace App\Service;
 
-use App\Dto\TokenResponse;
 use App\Exception\UnauthorizedException;
+use App\Exception\UncorrectPasswordException;
+use App\Exception\UserNotFoundException;
+use App\Exception\ValidationException;
 use App\Models\Db;
 use DateTimeImmutable;
-use Exception;
 use Firebase\JWT\JWT;
 use PDO;
 use PDOException;
@@ -18,13 +19,13 @@ class AuthService
     {
     }
 
-    public function login(array $data): array
+    public function login(array $data)
     {
-        if (empty($data['wmail'] || empty($data['password']))) {
-
-        }
-        $email = $data['email'];
+        $email = $data['username'];
         $password = $data['password'];
+        if (empty($email) || empty($password)) {
+            throw new ValidationException();
+        }
 
         $sql = "SELECT * FROM user WHERE email = ?";
         $db = new Db();
@@ -36,26 +37,22 @@ class AuthService
         $db = null;
 
         if (!$user) {
-
-            $response->getBody()->write(json_encode("user not found" ));
-            return $response
-                ->withHeader('content-type', 'application/json')
-                ->withStatus(404);
+            throw new UserNotFoundException();
         }
 
         if ($user->password != $password) {
-            $response->getBody()->write(json_encode("password is not correct" ));
-            return $response
-                ->withHeader('content-type', 'application/json')
-                ->withStatus(404);
+            throw new UncorrectPasswordException();
         }
 
         ////// Создаем токен доступа и токен обновления
+        $accessToken = $this->createAccess($user->id);
+        $refreshToken = $this->createRefresh($user->id);
+        ///// end create token
 
-
-// end create token
-
-
+        return [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken
+        ];
     }
 
     public function refresh(string $oldRefreshToken): array

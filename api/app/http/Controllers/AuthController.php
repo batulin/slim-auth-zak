@@ -2,8 +2,11 @@
 
 namespace App\http\Controllers;
 
+use App\Exception\ValidationException;
 use App\Models\Db;
+use App\Service\AuthService;
 use DateTimeImmutable;
+use Exception;
 use PDO;
 use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -12,6 +15,10 @@ use Firebase\JWT\JWT;
 
 class AuthController
 {
+    public function __construct(private AuthService $service)
+    {
+    }
+
     public function signup(Request $request, Response $response)
     {
         $data = $request->getParsedBody();
@@ -90,49 +97,24 @@ class AuthController
 
     public function login(Request $request, Response $response)
     {
-        $data = $request->getParsedBody();
-        var_dump($data);
-        die();
-        $email = $data['email'];
-        $password = $data['password'];
-
-        $sql = "SELECT * FROM user WHERE email = ?";
-        $db = new Db();
-        $conn = $db->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(1, $email, PDO::PARAM_STR);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_OBJ);
-        $db = null;
-
-        if (!$user) {
-
-            $response->getBody()->write(json_encode("user not found" ));
-            return $response
-                ->withHeader('content-type', 'application/json')
-                ->withStatus(404);
-        }
-
-        if ($user->password != $password) {
-            $response->getBody()->write(json_encode("password is not correct" ));
-            return $response
-                ->withHeader('content-type', 'application/json')
-                ->withStatus(404);
-        }
-
-        ////// Создаем токен доступа и токен обновления
-
-
-// end create token
-        $response->getBody()->write(json_encode($result));
+        try {
+            $data = $request->getParsedBody();
+            $result = $this->service->login($data);
+            $response->getBody()->write(json_encode($result));
 //
 //        var_dump($jwt);
 //        $decoded = JWT::decode($jwt, new Key($key, 'HS256'));
 //        print_r($decoded);
 
-        return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(200);
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode($e->getMessage()));
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(500);
+        }
     }
 
 }
